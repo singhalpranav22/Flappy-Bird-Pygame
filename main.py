@@ -11,7 +11,7 @@ groundY = screenH*0.8
 SPRITES = {}
 SOUNDS = {}
 playerPath = os.path.join("sprites","redbird-upflap.png")
-bgPath = os.path.join("sprites","background-day.png")
+bgPath = os.path.join("sprites","background-night.png")
 pipePath = os.path.join("sprites","pipe-green.png")
 # print(pipePath)
 def genPipe():
@@ -84,8 +84,9 @@ def startGame():
                     playerFlapped = True
                     SOUNDS['wing'].play()
         crashTest = isCollide(xPlayer,yPlayer,upperPipes,lowerPipes)
+        isCrashed=False
         if crashTest:
-            return
+            isCrashed=True
 
         playermidPos = xPlayer + SPRITES['player'].get_width()/2
         for pipe in upperPipes:
@@ -117,7 +118,8 @@ def startGame():
             SCREEN.blit(SPRITES['pipes'][1], (lowerPipe['x'], lowerPipe['y']))
         SCREEN.blit(SPRITES['base'], (basex, groundY))
         SCREEN.blit(SPRITES['player'],(xPlayer,yPlayer))
-
+        if isCrashed:
+            SCREEN.blit(SPRITES['over'],((50,100)))
         myDigits = [int(x) for x in list(str(score))]
         width = 0
         for digit in myDigits:
@@ -129,8 +131,25 @@ def startGame():
             XoffSet+=SPRITES['numbers'][digit].get_width()
         pygame.display.update()
         FPSCLOCK.tick(FPS)
+        if isCrashed:
+            return
 
 def isCollide(xPlayer,yPlayer,upperPipes,lowerPipes):
+    if yPlayer<0 or yPlayer>groundY-25:
+        SOUNDS['hit'].play()
+        return True
+    for pipe in upperPipes:
+        pipeH=SPRITES['pipes'][0].get_height()
+        pipeW=SPRITES['pipes'][0].get_width()
+        if (yPlayer<pipeH+pipe['y']-3 and abs(xPlayer-pipe['x'])<pipeW-14):
+            SOUNDS['hit'].play()
+            return True
+    for pipe in lowerPipes:
+        pipeW = SPRITES['pipes'][1].get_width()
+        if(yPlayer+SPRITES['player'].get_height() > pipe['y'] and abs(xPlayer-pipe['x'])<pipeW-14):
+            SOUNDS['hit'].play()
+            return True
+
     return False
 if __name__ == '__main__':
     pygame.init()
@@ -156,6 +175,7 @@ if __name__ == '__main__':
     )
     SPRITES['background']=pygame.image.load(bgPath).convert()
     SPRITES['player']=pygame.image.load(playerPath).convert_alpha()
+    SPRITES['over']=pygame.image.load(os.path.join("sprites","gameover.png")).convert()
     SOUNDS['hit']=pygame.mixer.Sound(os.path.join("audio","hit.wav"))
     SOUNDS['die'] = pygame.mixer.Sound(os.path.join("audio", "die.wav"))
     SOUNDS['swoosh'] = pygame.mixer.Sound(os.path.join("audio", "swoosh.wav"))
